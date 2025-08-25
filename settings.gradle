@@ -1,0 +1,5 @@
+include 'gateway-api'
+include 'eureka-server'
+include 'config-server'
+
+rootProject.name = 'shop'
