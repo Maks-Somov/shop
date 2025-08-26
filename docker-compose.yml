@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  eureka-server:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: eureka-server } }
+    container_name: eureka-server
+    environment:
+      SPRING_APPLICATION_NAME: eureka-server
+      SERVER_PORT: "8761"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+    ports: ["8761:8761"]
+    restart: unless-stopped
+
+  eureka-hc:
+    image: curlimages/curl:8.7.1
+    container_name: eureka-hc
+    depends_on:
+      - eureka-server
+    command: ["sh", "-c", "tail -f /dev/null"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://eureka-server:8761/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  config-server:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: config-server } }
+    container_name: config-server
+    environment:
+      SPRING_APPLICATION_NAME: config-server
+      SERVER_PORT: "8888"
+
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: "https://github.com/Maks-Somov/config-properties"
+      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: "main"
+      SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS: "{application}"
+      SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
+      SPRING_CLOUD_CONFIG_SERVER_GIT_FORCE_PULL: "true"
+
+      eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    ports: ["8888:8888"]
+    depends_on:
+      eureka-hc:
+        condition: service_healthy
+    restart: unless-stopped
+
+  config-hc:
+    image: curlimages/curl:8.7.1
+    container_name: config-hc
+    depends_on:
+      - config-server
+    command: ["sh", "-c", "tail -f /dev/null"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://config-server:8888/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  gateway-api:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: gateway-api } }
+    container_name: gateway-api
+    environment:
+      SPRING_APPLICATION_NAME: gateway-api
+      SERVER_PORT: "8080"
+
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+
+      SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS: "15"
+      SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL: "1000"
+      SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
+
+      eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+    ports: ["8080:8080"]
+    depends_on:
+      eureka-hc:
+        condition: service_healthy
+      config-hc:
+        condition: service_healthy
+    restart: unless-stopped
