@@ -1,5 +1,6 @@
 include 'gateway-api'
 include 'eureka-server'
 include 'config-server'
+include 'product-api'
 
 rootProject.name = 'shop'

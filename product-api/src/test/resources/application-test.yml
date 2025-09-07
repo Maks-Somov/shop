@@ -1,0 +1,10 @@
+eureka:
+  client:
+    enabled: false
+spring:
+  cloud:
+    discovery:
+      enabled: false
+  config:
+    enabled: false
+    uri: http://localhost:0
