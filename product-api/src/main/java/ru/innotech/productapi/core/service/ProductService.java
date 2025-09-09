@@ -1,18 +1,18 @@
 package ru.innotech.productapi.core.service;
 
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.NotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.innotech.productapi.adapters.controller.dto.request.ProductRequest;
 import ru.innotech.productapi.adapters.controller.dto.response.ProductResponse;
 import ru.innotech.productapi.adapters.discount.DiscountApi;
 import ru.innotech.productapi.adapters.discount.dto.DiscountResponse;
 import ru.innotech.productapi.adapters.repository.ProductRepository;
+import ru.innotech.productapi.core.exception.NotFoundException;
 import ru.innotech.productapi.core.mapper.ProductMapper;
 import ru.innotech.productapi.core.model.Product;
 
@@ -29,12 +29,14 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id %s is not found", id)));
         return productMapper.toDto(product);
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getProducts() {
         return productRepository.findAll().stream()
                 .map(productMapper::toDto)
@@ -48,7 +50,14 @@ public class ProductService {
 
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest productRequest) {
-        Product product = productMapper.toEntity(productRequest);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("User with id %s is not found", id)));
+
+        product.setName(productRequest.name());
+        product.setDescription(productRequest.description());
+        product.setCurrency(productRequest.currency());
+        product.setPrice(productRequest.price());
+
         return productMapper.toDto(productRepository.save(product));
     }
 

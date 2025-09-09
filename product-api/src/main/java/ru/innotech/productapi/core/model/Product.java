@@ -1,7 +1,6 @@
 package ru.innotech.productapi.core.model;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,9 +12,9 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +26,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class Product {
 
     @Id
@@ -57,6 +57,9 @@ public class Product {
         updatedAt = createdAt;
         if (status == null) {
             status = ProductStatus.ACTIVE;
+        }
+        if (discount == null) {
+            discount = BigDecimal.ZERO;
         }
     }
 

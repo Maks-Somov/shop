@@ -1,0 +1,17 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/api/v1/discounts-remove-all-after-first--"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "discount.json",
+    "transformers": [
+      "response-template"
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
