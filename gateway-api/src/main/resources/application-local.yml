@@ -6,6 +6,87 @@ spring:
       discovery:
         enabled: true
         service-id: config-server
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: product-api
+              uri: http://localhost:8081
+              predicates:
+                - Path=/product/**
+              metadata:
+                response-timeout: 500
+                connect-timeout: 200
+              filters:
+                - StripPrefix=1
+                - name: CircuitBreaker
+                  args:
+                    name: productApiCircuitBreaker
+                    fallbackUri: forward:/some-fallback
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY
+                    methods: GET,POST
+                    backoff:
+                      firstBackoff: 10ms
+                      maxBackoff: 50ms
+                      factor: 2
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: "*"
+                allowedMethods: "*"
+                allowedHeaders: "*"
+                allowCredentials: false
+          httpclient:
+            pool:
+              max-idle-time: 5m
+            connect-timeout: 1000
+            response-timeout: 3000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      productApiCircuitBreaker:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000ms
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+  retry:
+    configs:
+      default:
+        maxAttempts: 2
+        waitDuration: 5s
+        retryExceptions:
+          - java.util.concurrent.TimeoutException
+    instances:
+      productApiRetry:
+        maxAttempts: 3
+        waitDuration: 10s
+        retryExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+  bulkhead:
+    configs:
+      default:
+        queueCapacity: 5
+    instances:
+      productApiBulkhead:
+        maxConcurrentCalls: 10
+        maxWaitDuration: 500ms
+        queueCapacity: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, beans, health, prometheus, gateway
 
 eureka:
   client:
