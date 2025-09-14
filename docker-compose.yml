@@ -77,6 +77,8 @@ services:
       SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
       SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
 
+      OTLP_ENDPOINT: "http://otel-collector:4318/v1/traces"
+
       eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
       EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
       EUREKA_CLIENT_FETCH_REGISTRY: "true"
@@ -85,6 +87,8 @@ services:
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
     ports: ["8080:8080"]
     depends_on:
+      otel-collector:
+        condition: service_started
       eureka-hc:
         condition: service_healthy
       config-hc:
@@ -122,16 +126,40 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: UTC
 
-      SPRING_CONFIG_IMPORT: "optional:configserver:"
-      SPRING_CONFIG_ENABLED: "false"
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+
+      SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS: "15"
+      SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL: "1000"
+      SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
+
+      OTLP_ENDPOINT: "http://otel-collector:4318/v1/traces"
 
       eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
       EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
       EUREKA_CLIENT_FETCH_REGISTRY: "true"
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
+      otel-collector:
+        condition: service_started
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.104.0
+    command: [ "--config=/etc/otelcol/config.yaml" ]
+    volumes:
+      - ./otel/config.yaml:/etc/otelcol/config.yaml
+    ports:
+      - "4318:4318"
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    ports:
+      - "16686:16686"
     restart: unless-stopped
 
 volumes:
