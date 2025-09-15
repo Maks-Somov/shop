@@ -19,6 +19,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding'
 
+    implementation 'net.logstash.logback:logstash-logback-encoder'
+
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner'
