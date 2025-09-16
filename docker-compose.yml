@@ -167,6 +167,7 @@ services:
     environment:
       discovery.type: "single-node"
       ELASTIC_PASSWORD: "changeme"
+      xpack.security.enabled: "false"
     ports:
       - "9200:9200"
     volumes:
@@ -174,14 +175,23 @@ services:
     restart: unless-stopped
 
   fluent-bit:
-    image: fluent/fluent-bit:1.8
+    image: fluent/fluent-bit:latest
     container_name: fluent-bit
     environment:
       FLUENT_ELASTICSEARCH_HOST: "elasticsearch"
       FLUENT_ELASTICSEARCH_PORT: "9200"
       FLUENT_ELASTICSEARCH_INDEX: "fluent-bit"
+      ELASTIC_USER: elastic
+      ELASTIC_PASSWORD: changeme
+      XPACK_MONITORING_ELASTICSEARCH_USERNAME: elastic
+      XPACK_MONITORING_ELASTICSEARCH_PASSWORD: changeme
+      XPACK_MONITORING_ELASTICSEARCH_HOSTS: "http://localhost:9200"
+      XPACK_MONITORING_ENABLED: true
+      FLB_ES_HOST: "elasticsearch"
+      FLB_ES_PORT: "9200"
     volumes:
       - /var/log/containers:/var/log/containers
+      - /var/lib/docker/containers:/var/lib/docker/containers
       - ./elk/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       - ./elk/parsers.conf:/fluent-bit/etc/parsers.conf
     depends_on:
@@ -191,7 +201,8 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:8.4.2
     environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      ELASTICSEARCH_URL: "http://elasticsearch:9200"
+      XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: true
     ports:
       - "5601:5601"
     depends_on:
