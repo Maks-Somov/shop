@@ -42,7 +42,7 @@ public class ProductService {
             }
         } catch (Exception e) {
             metricsService.incrementErrorCounter("createProduct");
-            log.error("Create product: failed - {}", e.toString());
+            log.error("Create product: failed - {}", e.getMessage());
             throw e;
         }
     }
@@ -62,7 +62,7 @@ public class ProductService {
             return productMapper.toDto(product);
         } catch (Exception e) {
             metricsService.incrementErrorCounter("getProduct");
-            log.error("Get product: failed - {}", e.toString());
+            log.error("Get product: failed - {}", e.getMessage());
             throw e;
         }
     }
@@ -80,7 +80,7 @@ public class ProductService {
             return result;
         } catch (Exception e) {
             metricsService.incrementErrorCounter("getProducts");
-            log.error("Get products: failed - {}", e.toString());
+            log.error("Get products: failed - {}", e.getMessage());
             throw e;
         }
     }
@@ -95,7 +95,7 @@ public class ProductService {
             log.info("Delete product: done");
         } catch (Exception e) {
             metricsService.incrementErrorCounter("deleteProduct");
-            log.error("Delete product: failed - {}", e.toString());
+            log.error("Delete product: failed - {}", e.getMessage());
             throw e;
         }
     }
@@ -122,7 +122,7 @@ public class ProductService {
             return productMapper.toDto(saved);
         } catch (Exception e) {
             metricsService.incrementErrorCounter("updateProduct");
-            log.error("Update product: failed - {}", e.toString());
+            log.error("Update product: failed - {}", e.getMessage());
             throw e;
         }
     }
@@ -150,7 +150,7 @@ public class ProductService {
             }
         } catch (Exception e) {
             metricsService.incrementErrorCounter("updateDiscounts");
-            log.error("Update discounts: failed - {}", e.toString());
+            log.error("Update discounts: failed - {}", e.getMessage());
             throw e;
         }
     }

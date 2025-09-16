@@ -5,10 +5,8 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>
-                %d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) -
-                [tid:%X{traceId}] [sid:%X{spanId}] [op:%X{op}] [pid:%X{productId}]
-                %replace(%msg){'[\r\n\t]+',' '}%ex{full}
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] [tid:%X{traceId}] [sid:%X{spanId}] [op:%X{op}]
+                [pid:%X{productId}] %logger : %msg%n
             </pattern>
             <immediateFlush>true</immediateFlush>
         </encoder>
