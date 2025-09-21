@@ -4,3 +4,13 @@ spring:
 
 server:
   port: 8761
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, beans, health, prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

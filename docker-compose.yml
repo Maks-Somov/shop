@@ -99,15 +99,15 @@ services:
     image: postgres:16-alpine
     container_name: postgres
     environment:
-      POSTGRES_DB: productdb
-      POSTGRES_USER: product
-      POSTGRES_PASSWORD: product
+      POSTGRES_DB: shopdb
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U product -d productdb || exit 1" ]
+      test: [ "CMD-SHELL", "pg_isready -U shop -d shopdb || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -120,9 +120,9 @@ services:
       - "8081:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/productdb
-      SPRING_DATASOURCE_USERNAME: product
-      SPRING_DATASOURCE_PASSWORD: product
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shopdb
+      SPRING_DATASOURCE_USERNAME: shop
+      SPRING_DATASOURCE_PASSWORD: shop
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: UTC
 
@@ -145,6 +145,146 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  order-api:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: order-api } }
+    container_name: order-api
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shopdb
+      SPRING_DATASOURCE_USERNAME: shop
+      SPRING_DATASOURCE_PASSWORD: shop
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: UTC
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017
+      SPRING_DATA_MONGODB_DATABASE: order-events
+
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
+
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+
+      SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS: "15"
+      SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL: "1000"
+      SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
+
+      eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      kafka:
+        condition: service_started
+    restart: unless-stopped
+
+  order-orchestrator:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: order-orchestrator } }
+    container_name: order-orchestrator
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shopdb
+      SPRING_DATASOURCE_USERNAME: shop
+      SPRING_DATASOURCE_PASSWORD: shop
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: UTC
+
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
+
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+
+      SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS: "15"
+      SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL: "1000"
+      SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
+
+      eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    restart: unless-stopped
+
+  inventory-api:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: inventory-api } }
+    container_name: inventory-api
+    ports:
+      - "8084:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shopdb
+      SPRING_DATASOURCE_USERNAME: shop
+      SPRING_DATASOURCE_PASSWORD: shop
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: UTC
+
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
+
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+
+      SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS: "15"
+      SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL: "1000"
+      SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
+
+      eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    restart: unless-stopped
+
+  payment-api:
+    build: { context: ., dockerfile: Dockerfile, args: { MODULE: payment-api } }
+    container_name: payment-api
+    ports:
+      - "8085:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shopdb
+      SPRING_DATASOURCE_USERNAME: shop
+      SPRING_DATASOURCE_PASSWORD: shop
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: UTC
+
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
+
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+
+      SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS: "15"
+      SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL: "1000"
+      SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER: "1.5"
+      SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL: "5000"
+
+      eureka.client.service-url.defaultZone: "http://eureka-server:8761/eureka/"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     restart: unless-stopped
 
   otel-collector:
@@ -209,7 +349,65 @@ services:
       - elasticsearch
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: 'admin'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "22181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    #    environment:
+    #      - MONGO_INITDB_ROOT_USERNAME=admin
+    #      - MONGO_INITDB_ROOT_PASSWORD=admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
 volumes:
   es_data:
     driver: local
   pgdata:
+  kafka_data:
+  mongo_data:
