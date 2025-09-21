@@ -21,7 +21,7 @@ public class OutboxRelay {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Transactional
-    @Scheduled(fixedDelayString = "PT10S")
+    @Scheduled(fixedDelayString = "PT30S")
     public void publishBatch() {
         List<OutboxMessage> batch = outboxRepository.pickBatch(PageRequest.of(0, 100));
         for (OutboxMessage m : batch) {
@@ -31,10 +31,12 @@ public class OutboxRelay {
                 m.setStatus(OutboxStatus.SENT);
                 m.setLastAttemptAt(Instant.now());
             } catch (Exception ex) {
+                log.error("Message {} was not sent because of {}", m.getPayloadJson(), ex.getMessage());
                 m.setStatus(OutboxStatus.ERROR);
                 m.setLastAttemptAt(Instant.now());
                 m.setLastError(ex.getMessage());
             }
+            outboxRepository.save(m);
         }
     }
 }

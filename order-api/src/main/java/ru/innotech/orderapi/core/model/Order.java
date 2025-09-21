@@ -47,25 +47,15 @@ public class Order {
     }
 
     public void applyEvent(Event event) {
-        if (event instanceof OrderCreatedEvent) {
-            OrderCreatedEvent e = (OrderCreatedEvent) event;
+        if (event instanceof OrderCreatedEvent e) {
             this.customerId = e.getCustomerId();
             this.status = "CREATED";  // Статус по умолчанию
-        } else if (event instanceof OrderStatusChangedEvent) {
-            OrderStatusChangedEvent e = (OrderStatusChangedEvent) event;
+        } else if (event instanceof OrderStatusChangedEvent e) {
             this.status = e.getStatus();
             if (e.getStatus().equals("PAYMENT_PENDING")) {
                 this.amount = e.getAmount();
-                this.isPaymentPending = true;
             }
-            if (e.getStatus().equals("CONFIRMED")) {
-                this.isConfirmed = true;
-            }
-            if (e.getStatus().equals("CANCELLED")) {
-                this.isCancelled = true;
-            }
-        } else if (event instanceof ItemAddedToOrderEvent) {
-            ItemAddedToOrderEvent e = (ItemAddedToOrderEvent) event;
+        } else if (event instanceof ItemAddedToOrderEvent e) {
             this.items.add(e.getItemId());
         }
     }

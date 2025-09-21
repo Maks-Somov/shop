@@ -2,9 +2,7 @@ package ru.innotech.orderapi.adapters.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -15,10 +13,7 @@ import ru.innotech.orderapi.adapters.repository.EventStoreRepository;
 import ru.innotech.orderapi.adapters.repository.OrderRepository;
 import ru.innotech.orderapi.core.model.Event;
 import ru.innotech.orderapi.core.model.Order;
-import ru.innotech.orderapi.core.model.OrderCreatedEvent;
 import ru.innotech.orderapi.core.model.OrderStatusChangedEvent;
-import ru.innotech.orderapi.core.model.shared.MessageEnvelope;
-import ru.innotech.orderapi.core.model.shared.OrderConfirmRequestedEvent;
 import ru.innotech.orderapi.core.service.OutboxService;
 
 @Slf4j
@@ -42,12 +37,7 @@ public class EventConsumer {
         Order order = getOrderFromEvents(event.getOrderId());
         order.applyEvent(event);
 
-        if (order.isPaymentPending()) {
-            outboxService.enqueueOrder(order);
-        }
-        if (order.isCancelled() || order.isConfirmed()) {
-            orderRepository.save(order);
-        }
+        handleEvent(event, order);
     }
 
     private Order getOrderFromEvents(String orderId) {
@@ -56,5 +46,28 @@ public class EventConsumer {
         Order order = new Order(orderId);
         order.replayEvents(events);
         return order;
+    }
+
+    private void handleEvent(Event event, Order order) {
+        if (event instanceof OrderStatusChangedEvent statusChangedEvent) {
+            if (isPaymentPending(statusChangedEvent)) {
+                outboxService.enqueueOrder(order);
+            }
+            if (isCancelled(statusChangedEvent) || isConfirmed(statusChangedEvent)) {
+                orderRepository.save(order);
+            }
+        }
+    }
+
+    private boolean isPaymentPending(OrderStatusChangedEvent event) {
+        return event.getStatus().equals("PAYMENT_PENDING");
+    }
+
+    private boolean isConfirmed(OrderStatusChangedEvent event) {
+        return event.getStatus().equals("CONFIRMED");
+    }
+
+    private boolean isCancelled(OrderStatusChangedEvent event) {
+        return event.getStatus().equals("CANCELLED");
     }
 }
