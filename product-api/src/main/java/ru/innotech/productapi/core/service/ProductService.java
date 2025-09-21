@@ -1,5 +1,7 @@
 package ru.innotech.productapi.core.service;
 
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,7 @@ import ru.innotech.productapi.adapters.discount.DiscountApi;
 import ru.innotech.productapi.adapters.discount.dto.DiscountResponse;
 import ru.innotech.productapi.adapters.repository.ProductRepository;
 import ru.innotech.productapi.core.exception.NotFoundException;
+import ru.innotech.productapi.core.exception.TooManyRequestsException;
 import ru.innotech.productapi.core.mapper.ProductMapper;
 import ru.innotech.productapi.core.model.Product;
 
@@ -48,6 +51,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @RateLimiter(name = "getProductLimiter", fallbackMethod = "getProductFallback")
     public ProductResponse getProduct(Long id) {
         try (var op = MDC.putCloseable("op", "getProduct");
              var idc = MDC.putCloseable("productId", String.valueOf(id))) {
@@ -65,6 +69,14 @@ public class ProductService {
             log.error("Get product: failed - {}", e.getMessage());
             throw e;
         }
+    }
+
+    private ProductResponse getProductFallback(Long id, RuntimeException ex) {
+        log.error(ex.getMessage(), ex);
+        if (ex instanceof RequestNotPermitted) {
+            throw new TooManyRequestsException();
+        }
+        throw ex;
     }
 
     @Transactional(readOnly = true)

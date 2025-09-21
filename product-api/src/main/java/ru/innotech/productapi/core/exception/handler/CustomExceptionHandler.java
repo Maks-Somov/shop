@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import ru.innotech.productapi.core.exception.ExceptionResponse;
 import ru.innotech.productapi.core.exception.NotFoundException;
+import ru.innotech.productapi.core.exception.TooManyRequestsException;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -26,6 +27,13 @@ public class CustomExceptionHandler  {
         String message = exception.getMessage();
         ExceptionResponse exceptionResponse = new ExceptionResponse(message, LocalDateTime.now(), webRequest.getDescription(false));
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public final ResponseEntity<ExceptionResponse> handleException(TooManyRequestsException exception, WebRequest webRequest) {
+        String message = exception.getMessage();
+        ExceptionResponse exceptionResponse = new ExceptionResponse(message, LocalDateTime.now(), webRequest.getDescription(false));
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(exceptionResponse);
     }
 
 }

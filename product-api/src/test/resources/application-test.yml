@@ -12,3 +12,15 @@ spring:
     enabled: false
     uri: http://localhost:0
     import: "optional:configserver:"
+
+resilience4j:
+  ratelimiter:
+    instances:
+      getProductLimiter:
+        limit-for-period: 100
+        limit-refresh-period: 1s
+        timeout-duration: 5s
+    default:
+      limit-for-period: 100
+      limit-refresh-period: 1s
+      timeout-duration: 5s
