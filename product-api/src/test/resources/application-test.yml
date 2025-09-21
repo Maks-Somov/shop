@@ -20,7 +20,8 @@ resilience4j:
         limit-for-period: 100
         limit-refresh-period: 1s
         timeout-duration: 5s
-    default:
-      limit-for-period: 100
-      limit-refresh-period: 1s
-      timeout-duration: 5s
+    configs:
+      default:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
