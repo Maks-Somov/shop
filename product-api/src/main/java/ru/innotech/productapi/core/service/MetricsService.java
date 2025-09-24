@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class MetricsService {
     private final MeterRegistry meterRegistry;
 
-    private Map<String, Counter> errorsCounter = new ConcurrentHashMap<>();
+    private final Map<String, Counter> errorsCounter = new ConcurrentHashMap<>();
 
     public void incrementErrorCounter(String operation) {
         errorsCounter.computeIfAbsent(operation, o -> meterRegistry.counter("service.errors", "operation", o))

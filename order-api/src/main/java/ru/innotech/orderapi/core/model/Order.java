@@ -8,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,13 +30,6 @@ public class Order {
     private String status;
     private BigDecimal amount;
 
-    @Transient
-    private boolean isPaymentPending;
-    @Transient
-    private boolean isConfirmed;
-    @Transient
-    private boolean isCancelled;
-
     @ElementCollection
     @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
     private List<String> items = new ArrayList<>();
@@ -49,7 +41,7 @@ public class Order {
     public void applyEvent(Event event) {
         if (event instanceof OrderCreatedEvent e) {
             this.customerId = e.getCustomerId();
-            this.status = "CREATED";  // Статус по умолчанию
+            this.status = "CREATED";
         } else if (event instanceof OrderStatusChangedEvent e) {
             this.status = e.getStatus();
             if (e.getStatus().equals("PAYMENT_PENDING")) {

@@ -33,9 +33,6 @@
                 <timestamp/>
                 <logLevel/>
                 <threadName/>
-                <message/>
-                <arguments/>
-                <exception/>
                 <mdc>
                     <includeMdcKeyName>traceId</includeMdcKeyName>
                     <includeMdcKeyName>spanId</includeMdcKeyName>
@@ -44,9 +41,7 @@
                     <includeMdcKeyName>batchSize</includeMdcKeyName>
                     <includeMdcKeyName>updatedCount</includeMdcKeyName>
                 </mdc>
-                <context/>
-                <stackTrace/>
-                <globalCustomFields>{"app":"${APP_NAME}"}</globalCustomFields>
+                <message/>
             </providers>
             <timeZone>UTC</timeZone>
         </encoder>

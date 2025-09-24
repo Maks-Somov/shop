@@ -53,8 +53,9 @@ public class ProductService {
     @Transactional(readOnly = true)
     @RateLimiter(name = "getProductLimiter", fallbackMethod = "getProductFallback")
     public ProductResponse getProduct(Long id) {
-        try (var op = MDC.putCloseable("op", "getProduct");
-             var idc = MDC.putCloseable("productId", String.valueOf(id))) {
+        try {
+            MDC.put("op", "getProduct");
+            MDC.put("productId", String.valueOf(id));
 
             log.debug("Get product: fetching by id");
             Product product = productRepository.findById(id)
@@ -114,8 +115,8 @@ public class ProductService {
 
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest productRequest) {
-        try (var op = MDC.putCloseable("op", "updateProduct");
-             var idc = MDC.putCloseable("productId", String.valueOf(id))) {
+        try (var op = MDC.putCloseable("op", "updateProduct")) {
+            MDC.put("productId", String.valueOf(id));
 
             log.info("Update product: start");
             Product product = productRepository.findById(id)

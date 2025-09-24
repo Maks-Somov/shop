@@ -42,7 +42,7 @@ public class OrchestratorListeners {
 
     @Transactional
     @KafkaListener(topics = "${topics.orders.events}")
-    public void onOrderEvents(String raw) throws Exception {
+    public void onOrderEvents(String raw) throws JsonProcessingException {
         log.info("Message {} was received", raw);
         JsonNode node = mapper.readTree(raw);
         String type = node.get("type").asText();
@@ -76,8 +76,7 @@ public class OrchestratorListeners {
 
     @Transactional
     @KafkaListener(topics = "${topics.payment.replies}")
-    public void onPaymentReplies(String raw) throws Exception {
-        log.info("Message {} was received", raw);
+    public void onPaymentReplies(String raw) throws JsonProcessingException {
         JsonNode node = mapper.readTree(raw);
         String type = node.get("type").asText();
         String orderId = node.get("payload").get("orderId").asText();
@@ -98,7 +97,6 @@ public class OrchestratorListeners {
                     .payload(new ReserveStockCommandPayload(orderId, List.of()))
                     .build();
             kafkaTemplate.send(inventoryCommandsTopic, orderId, mapper.writeValueAsString(cmd));
-            log.info("Message {} was sent", mapper.writeValueAsString(cmd));
         }
         if ("PaymentCancelledEvent".equals(type)) {
             cancelOrder(orderId, saga, "payment failed");
@@ -107,7 +105,7 @@ public class OrchestratorListeners {
 
     @Transactional
     @KafkaListener(topics = "${topics.inventory.replies}")
-    public void onInventoryReplies(String raw) throws Exception {
+    public void onInventoryReplies(String raw) throws JsonProcessingException {
         log.info("Message {} was received", raw);
         JsonNode node = mapper.readTree(raw);
         String type = node.get("type").asText();

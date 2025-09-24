@@ -1,7 +1,5 @@
 package ru.innotech.orderapi.adapters.kafka;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +22,10 @@ public class EventConsumer {
     private final EventStoreRepository eventStoreRepository;
     private final OrderRepository orderRepository;
     private final OutboxService outboxService;
-    private final ObjectMapper objectMapper;
 
     @Transactional
     @KafkaListener(topics = "${topics.orders.input}")
-    public void consumeEvent(ConsumerRecord<String, Event> eventRecord) throws JsonProcessingException {
-        log.info("Message {} was received", objectMapper.writeValueAsString(eventRecord.value()));
+    public void consumeEvent(ConsumerRecord<String, Event> eventRecord) {
         Event event = eventRecord.value();
 
         eventStoreRepository.save(event);

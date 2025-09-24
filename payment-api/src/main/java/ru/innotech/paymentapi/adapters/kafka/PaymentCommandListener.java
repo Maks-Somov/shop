@@ -1,5 +1,6 @@
 package ru.innotech.paymentapi.adapters.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ public class PaymentCommandListener {
 
     @KafkaListener(topics = "${topics.payment.commands}")
     @Transactional
-    public void onCommands(String raw) throws Exception {
+    public void onCommands(String raw) throws JsonProcessingException {
         log.info("Message {} was received", raw);
         JsonNode node = mapper.readTree(raw);
         String type = node.get("type").asText();

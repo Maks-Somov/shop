@@ -1,5 +1,6 @@
 package ru.innotech.inventoryapi.adapters.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -30,8 +31,7 @@ public class InventoryCommandListener {
 
     @Transactional
     @KafkaListener(topics = "${topics.inventory.commands}")
-    public void onCommands(String raw) throws Exception {
-        log.info("Message {} was received", raw);
+    public void onCommands(String raw) throws JsonProcessingException {
         JsonNode node = mapper.readTree(raw);
         String type = node.get("type").asText();
         if (!"ReserveStockCommand".equals(type)) return;
@@ -53,6 +53,5 @@ public class InventoryCommandListener {
                 .build();
 
         kafkaTemplate.send(inventoryReplies, orderId, mapper.writeValueAsString(evt));
-        log.info("Message {} was sent", mapper.writeValueAsString(evt));
     }
 }
